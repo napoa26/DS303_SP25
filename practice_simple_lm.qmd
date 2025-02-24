@@ -32,9 +32,9 @@ Yes! Despite, again, basically being the same thing, the difference in notation 
 
 What is the difference between *y* = *b~0~* + *b~1~x* and *y* = *mx* + *b*, and when might we use one over the other? Please use your own words
 
-#### Answer:
+#### Answer
 
-(write your answer here)
+As we discussed in class, they are substantially the same and perform the same function. The most obvious difference is in notation. The former is in notation associated with statistics, while the latter more with algebra, trigonometry, and algebra.
 
 ### Question 2
 
