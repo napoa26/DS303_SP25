@@ -44,6 +44,8 @@ Let's create `race.f`, which is the `race` data re-labeled and also turned into 
 
 ```{r}
 hsb2$race.f = factor(hsb2$race, labels=c("Hispanic", "Asian", "African-Am", "Caucasian"))
+
+hsb2
 ```
 
 ### Inspect your data
@@ -134,24 +136,29 @@ Summarize these findings. What is your reference group, and how do the other gro
 \
 (write here)\
 
-## Deviation Coding
+Deviation Coding (DC)
 
 ### Alii, Bennett, Lavelle
 
 1.  What comparisons are made with this coding scheme?
 
-    -   This coding system compares the mean of the dependent variable for a
-        given level to the overall mean of the dependent variable.
+    -   This coding system compares the mean of the dependent variable for a given level to the overall mean of the dependent variable.
 
 2.  When is this coding scheme preferred? What types of data or analysis scenarios make this coding method particularly useful?
 
-    -   
+    -   DC is preferred when none of the data fits into a single reference category. In many circumstances, DC would work well analyzing likert data.
 
 3.  What are the advantages of this coding method? How does it simplify interpretation or enhance model performance?
 
+    -   The main advantage of DC is that it compares the mean of each individual case with the grand mean of the entire group. I think this would enhance the model's performance, by providing a more realistic understanding of how each case fits into the whole.
+
 4.  What are the limitations of this coding method? Are there situations where this method may lead to misleading results or interpretations?
 
+    -   Based upon what I've read, it seems that one of DC's limitations is if it is used as a standalone analysis. It also seems as an analysis that is a–and powerful, if applied properly–means to an end. It can possibly produce unbalanced analyses, if one or more of the groups/levels are significantly larger than the others. DC should not be used when a distinct reference group exists.
+
 5.  How does this coding scheme affect the coefficients in regression models? What do the coefficients represent in the context of your chosen coding method?
+
+    -   
 
 ### Applying Deviation Coding
 
@@ -166,7 +173,7 @@ summary(dev)
 
 Summarize these findings. Unlike dummy and simple coding, there is no traditional reference level in deviation coding. In this context, how do the groups compare regarding their writing scores? What does the intercept value represent?\
 \
-(write here)\
+The 46.458 intercept, is the overall test score mean. The coefficients 11.542, 1.742, and 7.597 compare how each respective level's test scores average above the intercept.\
 
 ## Helmert Coding
 
