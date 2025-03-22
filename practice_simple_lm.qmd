@@ -1,7 +1,7 @@
 ---
 title: "Practice: Simple Linear Regression"
 author: 
-  - "Student Name"
+  - "Alii Napoleon"
   - "DS303, SP25"
   - "Prof. Amber Camp"
 date: 1/17/25
@@ -42,7 +42,13 @@ Think back to our class discussion and your previous studies in math. Tell me be
 
 #### Answer:
 
-(write your answer here)
+-   **y: is the dependent variable**
+
+-   ***b***~**0: the y-intercept, or the intercept**~
+
+-   ***b***~**1: the slope of the regression line**~
+
+-   **x:** the independent variable99 philly rea
 
 ## Let's try it
 
@@ -67,13 +73,40 @@ You can just call upon the data (it's already in the package). I'll get you star
 
 ```{r}
 head(Boston)
+str(Boston)
+summary(Boston)
+
+# My Exploration
+
+names(Boston)
+
+# Check for Missing Values
+
+colSums(is.na(Boston))
+
+# GCorrelation Check
+
+cor(Boston)
+
+# Preliminary Visualization
+
+pairs(Boston[, c("medv", "rm", "lstat", "age")])
+
+# Preliminary Target Variable Check
+
+hist(Boston$medv, main = "Distribution of Median Home Values", xlab = "medv", col = "lightblue")
+
+
+# Exploratory Boxplot
+
+boxplot(Boston$medv, main = "Boxplot of Median Home Values", horizontal = TRUE)
 
 ```
 
 We learned in class that we can apply a simple linear regression using `lm`. Here is the basic format:
 
 ```{r}
-model <- lm(y ~ x, data=df)
+#model <- lm(y ~ x, data=df)
 ```
 
 ### Question 4
@@ -81,26 +114,27 @@ model <- lm(y ~ x, data=df)
 Use the above basic format to create a linear regression model to predict the **median home value** (medv) based on the **percentage of lower status population** (lstat), using the data from the 'Boston' dataset. Assign it to the variable `lm.model`.
 
 ```{r}
+lm.model <- lm(medv ~ lstat, data = Boston)
 
 ```
 
 If you set it up right, you should be able to run your model name in the below code chunk and view the basic model output. Give it a try:
 
 ```{r}
-
+lm.model
 ```
 
 ### Question 5
 
 What is your model output telling you?
 
-#### Answer
+#### Answer:  The model tells us that there is a significantly negative relation, between lstat and medv. This means that as the percentage of lower income households increase, median home value decreases.
 
-(write your answer here)
-
-You can also try `summary(lm.model)`.
+You can also try \`summary(lm.model)\`.
 
 ```{r}
+lm.model <- lm(medv ~ lstat, data = Boston)
+
 summary(lm.model)
 ```
 
@@ -108,9 +142,7 @@ summary(lm.model)
 
 What additional information do you get from this summary of the model output?
 
-#### Answer
-
-(write your answer here)
+#### Answer:  The summary shows that lstat is a statistically significant predictor of medv, with a strong negative relationship, and that approximately 54% of the variation in home values is explained by the model.
 
 ## confint() and predict()
 
@@ -128,9 +160,7 @@ predict(lm.model, data.frame(lstat = (c(5, 10, 15))), interval = "prediction")
 
 What do you think the above `confint()` and `predict()` information means? It's okay to guess.
 
-#### Answer
-
-(write your answer here)
+#### Answer:  'confint()' shows the likely range of the true slope and intercept. 'predict()' estimates home values for 'lstat()'.
 
 ## Visualizing
 
@@ -146,6 +176,28 @@ abline(lm.model)
 Can you convert the above code chunk to `ggplot`? Try below. Have fun with editing the appearance of your plot if you'd like :)
 
 ```{r}
+library(ggplot2)
+
+ggplot(Boston, aes(x = lstat, y = medv)) +
+  geom_point(color = "steelblue", size = 2) +
+  geom_smooth(method = "lm", se = FALSE, color = "firebrick", linetype = "dashed") +
+  labs(title = "Relationship between lstat and medv",
+       x = "Percentage of Lower Status Population (lstat)",
+       y = "Median House Value (medv)") +
+  theme_minimal()
+
+
+ggplot(Boston, aes(x = lstat, y = medv)) +
+  geom_point(color = "#2C3E50", size = 3, alpha = 0.7) +
+  geom_smooth(method = "lm", se = TRUE, color = "#E74C3C", fill = "#FAD7A0") +
+  labs(title = "Relationship between lstat and medv",
+       subtitle = "Boston Housing Data",
+       x = "Percentage of Lower Status Population (lstat)",
+       y = "Median Home Value (medv, in $1000's)") +
+  theme_classic() +
+  theme(plot.title = element_text(face = "bold", size = 16),
+        plot.subtitle = element_text(size = 12))
+
 
 ```
 
@@ -164,15 +216,15 @@ First, view the dataset. Where can you find information about these variables?
 
 ```{r}
 View(Boston)
+
+help(Boston)
 ```
 
 ### Question 9
 
 What variables are you interested in exploring using a linear regression? Just pick and `x` and a `y` and describe your research question below in plain English:
 
-#### Answer
-
-(write your answer here)
+#### Answer:  I'd like to compare the medv and chas, to analyze the difference between the median values of tracts that bound the Charles River with those that do not.
 
 ### Question 10
 
@@ -181,9 +233,26 @@ What variables are you interested in exploring using a linear regression? Just p
 Build and run your model, examine the model output:
 
 ```{r}
+lm.model2 <- lm(lstat ~ chas, data = Boston)
 
+lm.model2
+```
 
+```{r}
+summary(lm.model2)
+```
 
+```{r}
+library(ggplot2)
+
+ggplot(Boston, aes(x = factor(chas), y = medv)) +
+  geom_boxplot(fill = "lightblue", color = "darkblue", alpha = 0.7) +
+  geom_jitter(width = 0.15, color = "darkred", alpha = 0.5) +
+  labs(title = "Median Home Value by Proximity to the Charles River",
+       x = "Tract Bounded by Charles River (chas)",
+       y = "Median Home Value (medv)") +
+  scale_x_discrete(labels = c("0" = "No", "1" = "Yes")) +
+  theme_minimal()
 
 ```
 
@@ -191,9 +260,7 @@ Build and run your model, examine the model output:
 
 Explain what you found in plain English. Do your best.
 
-#### Answer
-
-(write your answer here)
+#### Answer:  Most obvious, is that there are far fewer homes that bound the Charles River (Yes), than those that do not (No). Also, though the lowest median value is quite higher for 'Yes', the margin between the median value of the means is quite small.
 
 ## The end!
 
