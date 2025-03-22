@@ -1,0 +1,248 @@
+---
+title: "Vowel Analysis Final Report"
+author: 
+  - "Alii Napoleon"
+  - "'Participant 104'"
+  - "DS303, SP25"
+  - "Prof. Amber Camp"
+date: 3/14/25
+format: html
+toc: true
+editor: visual
+theme: spacelab
+---
+
+## Vowel Analysis Final Report
+
+### Load packages
+
+```{r, echo = TRUE, message = FALSE}
+library(tidyverse)
+library(lme4)
+library(lmerTest)
+
+# install.packages("phonR")
+library(phonR)
+```
+
+## Load data
+
+#### Read-in data for myself, Participant 104 (P104), and the full Modeling for Prediction class (all_data)
+
+Load your personal data (make sure you update from P104 -\> your P#)
+
+```{r}
+# read in data
+P104 <- read_csv("data/P104.csv")
+
+# convert variables to factor where needed
+convert_to_factor <- function(df, cols) {
+  df[cols] <- lapply(df[cols], as.factor)
+  return(df)
+}
+
+P104 <- convert_to_factor(P104, c("ppt", "word", "ipa", "arpa", "onset", "offset", "environment", "real_word", "sex", "ethnicity", "birthplace", "home_state", "years_lived_hi", "L1", "exposure_langs_yn", "exposure_langs", "speak_other", "item_num", "rep"))
+
+# remove a couple words you won't be needing
+P104 <- P104 %>%
+  dplyr::filter(!word %in% c("cot", "caught")) # added dplyr to specify which 'filter' to use
+
+```
+
+Class data:
+
+```{r}
+# read in data
+all_data <- read_csv("data/DS303_combined.csv")
+
+# convert variables to factor where needed
+all_data <- convert_to_factor(all_data, c("ppt", "word", "ipa", "arpa", "onset", "offset", "environment", "real_word", "sex", "ethnicity", "birthplace", "home_state", "years_lived_hi", "L1", "exposure_langs_yn", "exposure_langs", "speak_other", "item_num", "rep"))
+
+# remove a couple words you won't be needing
+all_data <- all_data %>%
+  dplyr::filter(!word %in% c("cot", "caught"))
+
+```
+
+## Explain the Data
+
+(1 point)
+
+In paragraph form:
+
+--  Describe where the data comes from. 
+
+-  This data was created by the students of our Modeling for Prediction class, Chaminade University, Fall 2025 semester.
+
+--  Summarize the contents of the data (how many observations, participants, items, etc.).
+
+-  There are a total of 13 participants, across 2 class secions. I am Participant 4 ("P104"). There are 102 observations, through 26 variables in my individual file. The entire class is assigned as "all_data", with 1201 observations of 26 variables.
+
+--   Mention any pre-processing steps taken. For example, I pre-processed this data by removing words that were obviously mispronounced before even sending it to you. Then, above, you converted certain variables to factor and removed the words "cot" and "caught", which are not relevant to your investigation. Have you done any additional processing? 
+
+- No, there was no pre-processing done.
+
+## Variables of Interest
+
+(1 point)
+
+For this project, you will explore and analyze the [**class-wide data set**]{.underline}. In paragraph form:
+
+--   Briefly introduce the purpose of this project. 
+
+-  The purpose of this projedct is "to evaluate different aspects of speech, focusing on vowels." It is also intented to teach us the process of collecting, storing, cleaning, analyzing, and presenting our own data.
+
+--   Identify and explain your variables of interest. 
+
+-  At this point, I am--and always have been--most interested in how people pronounce things. To this end, I will most likely be analyzing accents.
+
+--   State research questions or hypotheses about this data: 
+
+-  RESEARCH QUESTION: To what extent does f1 vary across speakers from different regions, and how are these vowel differences shaped by vowel identity?
+
+## EDA and Vowel Plots
+
+(3 points)
+
+--   Generate two vowel plots using `phonR`: one for your own data, and one for class data
+
+-  NOTE: I had several issues generating the plots, not fully understanding how to create a vowel plot. "vowelplot" is no longer available in the current version of "phonR". Per ChatGPT, I tried "install.packages("devtools")" and "devtools::install_github("daniel1noble/phonR")". That didn't work. GalaxyToolShed directed me to change the "ownername" from "daniel1noble" to "stevecassidy". That didn't work. I finally found a resource from dan.mccloy.info, that said the function is now called "plotVowels"; which is what I succeeded with.
+
+--  In a couple sentences, state your observations. Do you see any patterns or differences?
+
+-  In comparing the two plots, mine is more oriented around front vowels like /æ/ and /ɛ/, which may reflect influence from my living overseas and being raised in a multilingual background. In contrast, the full class dataset shows greater overall variation, suggesting a wider range of accents and speech patterns among participants.
+
+--  Include at least one visual that supports your hypothesis/justifies your models below, and explain
+
+-  Side-by-side, the plots show how my vowel articulation tends to differ from broader trends across the class. These differences appear to be visual evidence relevant to my research question.
+
+```{r}
+
+P104_data <- subset(P104, ppt == "P104")
+
+# Plot for participant P104
+
+plotVowels(f1 = P104_data$f1,
+           f2 = P104_data$f2,
+           at = P104_data$ipa,
+           color = "red",
+           main = "Vowel Space for P104",
+           revaxes = TRUE,
+           grid = TRUE)
+
+
+
+# Plot for full class dataset
+
+plotVowels(f1 = all_data$f1,
+           f2 = all_data$f2,
+           at = all_data$ipa,
+           color = "blue",
+           main = "Vowel Space for All Participants",
+           revaxes = TRUE,
+           grid = TRUE)
+
+
+```
+
+## Model Selection and Justification
+
+(3 points)
+
+--   You will build and analyze **two different statistical models** to investigate the relationship between your predictors and outcome variable
+
+--   The two models should differ in some way (e.g., one could include an additional or interaction term while the other does not)
+
+--   What statistical models will you use to investigate the relationship between your predictors and outcome variable? (linear vs. logistic regression? mixed effects model?)
+
+-  I chose to use two types of Mixed Linear-Effects (MLE) Models: Model 1 is of main effects only, (ipa + home_state) and Model 2 is of main effects with interaction (ipa * home_state).
+
+--  Why did you select these models?
+
+-  I chose MLE Models because each one of us were recorded speaking multiple vowels; which is why our data points are, more so, related rather than completely separate.
+
+--   Which variable(s) are included?
+
+-  In both models, "f1", "ipa", "home_state", and "ppt" were used
+
+
+```{r}
+# Model 1: Linear Mixed-Effects Model (ipa + home_state)
+
+model1 <- lmer(f1 ~ ipa + home_state + (1 | ppt), data = all_data)
+
+# Model 2: Linear Mixed-Effects Model with Interaction (ipa * home_state)
+
+model2 <- lmer(f1 ~ ipa * home_state + (1 | ppt), data = all_data)
+```
+
+## Model Comparisons and Best Fit
+
+(3 points)
+
+--   Build and run both models and display their summaries
+
+-  See Below
+
+--   Compare the two models, assess model fit, and determine the better fitting one
+
+-  Model 2 is the better fit. See Interpretation of Results
+
+```{r}
+# Model 1: Linear Mixed-Effects Model
+
+model1 <- lmer(f1 ~ ipa + home_state + (1 | ppt), data = all_data)
+
+summary(model1)
+
+# Model 2: Linear Mixed-Effects Model with Interaction
+
+model2 <- lmer(f1 ~ ipa * home_state + (1 | ppt), data = all_data)
+
+summary(model2)
+
+# Model Fit Comparison
+
+AIC(model1, model2)
+
+# Likelihood Ratio Tese
+
+anova(model1, model2)
+```
+
+## Interpretation of Results
+
+(3 points)
+
+--   Interpret coefficients and significance
+--   Explain how the predictor variable(s) influence the outcome
+
+-  Model 2 analyzes the interaction between vowel identity and regional background. Several coefficients showed statistical significance, indicating that f1 varies by the vowel itself and by speaker region. For example, speakers from Hawaii suggested a more open vowel articulation, compared to those from the US. This supports the idea that speaker region shapes vowel pronunciation, depending on the vowel spoken. 
+
+-  The results show that the effect of region depends on the vowel being spoken; which also supports the research question.
+
+The significant interaction terms show that home_state modifies the relationship between vowel and F1—in other words, the effect of region is not consistent across all vowels. This finding aligns with the research question and suggests that accent-related variation is nuanced and vowel-dependent.
+
+## Discussion and Conclusion
+
+(3 points)
+
+--   Summarize key findings
+
+-  This analysis examined how vowel production varies by where someone comes from, using F1 as the primary outcome. The key finding is that speakers from Hawaii showed systematic differences in the way they produced certain vowels compared to those from the mainland U.S.
+
+--   Discuss implications
+
+-  These results suggest that regional accents can shape specific vowel articulations, highlighting the importance of considering both linguistics geography in analyzing the way people speak.
+
+--   Mention limitations
+
+-  The very small sample size, limited every category and every variable. Despite the limitations, this was a very robust and interesting project. Future research holds tremendous promise, should there be a much larger sample acquired. 
+
+
+
+
+## --END--
+
+
+
