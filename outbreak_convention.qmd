@@ -1,0 +1,149 @@
+---
+title: "Outbreak at a Convention: Epidemiologic Investigation"
+author: "Epidemiology Class Discussion"
+date: "2025-04-01"
+format:
+  html:
+    toc: true
+    code-fold: true
+    theme: cosmo
+editor: visual
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(readr)
+library(epitools)
+```
+
+## Question 1: Suspected Agents and Incubation Periods
+
+Staphylococcus aureus is suspected due to the rapid onset (2–6 hours) of symptoms: nausea, vomiting, diarrhea, and cramps.
+
+## Question 2: Why Consider Incubation Period?
+
+To narrow down potential pathogens and identify likely exposure windows.
+
+## Question 3: Next Steps in Outbreak Investigation
+
+1.  Confirm outbreak
+2.  Define and identify cases
+3.  Describe by person/place/time
+4.  Develop hypotheses
+5.  Evaluate hypotheses
+6.  Refine hypotheses
+7.  Implement control and prevention
+8.  Communicate findings
+
+## Question 4: Environmental Health Actions
+
+-   Inspect kitchen and buffet
+-   Assess food handling practices
+-   Check temperatures of food storage
+-   Test leftovers
+
+## Question 5: Identifying the Food Source
+
+Compare illness frequency among those who ate each buffet item vs. those who didn’t (cohort design).
+
+## Question 6: Study Design
+
+A **cohort study** is best since we have a defined population (attendees) and complete contact info.
+
+## Question 7: Communication Method
+
+Primary: Email questionnaire; Secondary: Phone follow-up.
+
+## Question 8: Questionnaire Information to Collect
+
+-   Demographics
+-   Illness symptoms & onset
+-   Foods consumed at buffet
+-   Medical attention received
+
+## Questionnaire Draft
+
+```{markdown}
+Dear Conference Attendee,
+
+You are receiving this questionnaire because you attended the Museum Curators Conference on August 24th. Several attendees have become ill, and we are conducting a public health investigation.
+
+Please take 5 minutes to complete the form below.
+
+1. Name:
+2. Email:
+3. Sex:
+4. Date of Birth:
+5. Did you attend the lunch buffet on August 24? (Y/N)
+6. What time did you eat lunch?
+7. Which of the following did you eat? (Check all that apply)
+   - Pasta primavera
+   - Salad
+   - Chicken
+   - Bread rolls
+   - Dessert
+8. Did you experience any of the following symptoms?
+   - Nausea
+   - Vomiting
+   - Diarrhea
+   - Abdominal pain
+9. When did symptoms begin (time/date)?
+10. Did you seek medical care? (Y/N)
+
+Thank you for your help!
+```
+
+## Line Listing of 5 Case Patients
+
+```{r}
+line_data <- read_csv("/Users/anapoleon/Documents/DS400/DS303_SP25/data/line_listing.csv")
+line_data
+
+epi_data <- read_csv("/Users/anapoleon/Documents/DS400/DS303_SP25/data/epi_curve.csv")
+epi_data
+
+#/Users/anapoleon/Documents/DS400/DS303_SP25/data
+```
+
+## Epi Curve of Outbreak
+
+```{r}
+
+epi_data <- epi_data %>% 
+  pivot_longer(cols = c('Suspect Cases', 'Confirmed Cases', 'Total Cases'),
+               names_to = "case_type",
+               values_to = "number_of_cases")
+
+ggplot(epi_data, aes(x = Hour, y = number_of_cases, color = case_type)) +
+  geom_line(size = 1.2) +
+  labs(title = "Epidemic Case Trends Over Time",
+       x = "Date",
+       y = "Number of Cases",
+       color = "Case Type") +
+  theme_minimal()
+```
+
+## Question 10: Point Source or Propagated?
+
+**Point source outbreak** — all cases occurred over a short period after a common exposure (lunch buffet).
+
+## Question 11: Recommendations for Kitchen Staff
+
+-   Ensure hot food is held above 140°F (60°C)
+-   Improve staff hygiene (handwashing, gloves)
+-   Repair or replace faulty food warmers
+-   Limit time food sits out
+
+## Question 12: Steps in an Outbreak Investigation
+
+1.  Prepare for fieldwork
+2.  Establish outbreak existence
+3.  Verify diagnosis
+4.  Define and identify cases
+5.  Describe and orient data
+6.  Develop hypotheses
+7.  Evaluate hypotheses
+8.  Refine hypotheses and do more studies
+9.  Implement control/prevention
+10. Communicate findings
