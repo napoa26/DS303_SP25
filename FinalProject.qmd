@@ -1,0 +1,129 @@
+---
+title: "PNP Intrusion into Basophilic Leukemia Rat Mast Cells"
+author: "Your Name"
+date: "`r Sys.Date()`"
+format:
+  html:
+    code-fold: true
+execute:
+  echo: true
+  warning: false
+  message: false
+editor: visual
+---
+
+```{r setup}
+library(tidyverse)
+library(here)
+library(imager)
+library(EBImage)
+library(caret)
+library(glmnet)
+library(broom)
+library(knitr)
+library(pROC)
+```
+
+## Introduction
+
+This project explores the probability of polystyrene nanoplastic particles (PNPs) penetrating rat mast cells, based on microscopy image data.
+
+## Step 1: Image Conversion and Preprocessing
+
+### Load PNG Image for Pilot Test
+
+```{r load-png}
+img_path <- here("images", "test_image.png")
+img <- load.image(img_path)
+plot(img, main = "Original Image")
+```
+
+### Convert PNG to Matrix Format
+
+```{r image-matrix}
+img_gray <- grayscale(img)
+img_matrix <- as.matrix(img_gray)
+dim(img_matrix)  # Check dimensions
+```
+
+## Step 2: Convert LIF and LIFEXT to PNG (Pre-Step)
+
+Use **Bio-Formats** or **FIJI/ImageJ** to batch convert `.lif`/`.lifext` to `.png`: 1. Open FIJI/ImageJ 2. Install Bio-Formats plugin (via Update Sites) 3. Drag & drop `.lif` or `.lifext` images 4. Export as `.png` for each z-slice/field
+
+**Note:** Place output PNGs in `images/` directory for this workflow.
+
+## Step 3: Feature Extraction
+
+We use image intensity thresholds to detect red (mast cell) and green (PNP) regions.
+
+```{r extract-features}
+extract_color_features <- function(image, red_thresh = 0.5, green_thresh = 0.5) {
+  r <- R(image)
+  g <- G(image)
+
+  red_area <- sum(r > red_thresh)
+  green_area <- sum(g > green_thresh)
+  overlap <- sum((r > red_thresh) & (g > green_thresh))
+
+  data.frame(
+    red_area = red_area,
+    green_area = green_area,
+    overlap_area = overlap,
+    overlap_ratio = overlap / red_area
+  )
+}
+
+features <- extract_color_features(img)
+features
+```
+
+## Step 4: Build Logistic Regression Model
+
+Prepare a mock dataset for testing with synthetic labels.
+
+```{r model-setup}
+set.seed(42)
+dataset <- features %>%
+  slice(rep(1, 100)) %>%
+  mutate(
+    id = row_number(),
+    PNP_present = rbinom(100, 1, prob = overlap_ratio)
+  )
+```
+
+Fit logistic regression:
+
+```{r logit-model}
+model <- glm(PNP_present ~ red_area + green_area + overlap_area + overlap_ratio,
+             data = dataset, family = "binomial")
+summary(model)
+```
+
+## Step 5: Evaluate Model
+
+```{r model-eval}
+pred_probs <- predict(model, type = "response")
+roc_obj <- roc(dataset$PNP_present, pred_probs)
+plot(roc_obj, main = "ROC Curve")
+auc(roc_obj)
+```
+
+## Step 6: Automate on All PNGs
+
+```{r batch-process, eval=FALSE}
+all_imgs <- list.files(here("images"), pattern = "*.png", full.names = TRUE)
+
+all_features <- map_dfr(all_imgs, function(path) {
+  img <- load.image(path)
+  extract_color_features(img) %>% mutate(file = basename(path))
+})
+write_csv(all_features, here("output", "image_features.csv"))
+```
+
+## Conclusion
+
+This workflow extracts image-based features, builds a logistic model, and predicts PNP penetration probability. Further analysis will apply the model to full datasets.
+
+------------------------------------------------------------------------
+
+Let me know if you need help running this or expanding the models!
