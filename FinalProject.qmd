@@ -1,6 +1,6 @@
 ---
 title: "PNP Intrusion into Basophilic Leukemia Rat Mast Cells"
-author: "Your Name"
+author: "Alii Napoleon"
 date: "`r Sys.Date()`"
 format:
   html:
@@ -16,7 +16,7 @@ editor: visual
 library(tidyverse)
 library(here)
 library(imager)
-library(EBImage)
+# library(EBImage)
 library(caret)
 library(glmnet)
 library(broom)
@@ -33,9 +33,18 @@ This project explores the probability of polystyrene nanoplastic particles (PNPs
 ### Load PNG Image for Pilot Test
 
 ```{r load-png}
-img_path <- here("images", "test_image.png")
+img_path <- here("data", "an1_test.png")
 img <- load.image(img_path)
 plot(img, main = "Original Image")
+```
+
+### Validate Channel Count
+
+```{r check-channels}
+if (spectrum(img) != 3) {
+  stop("Image should have exactly three colour channels (RGB)")
+}
+
 ```
 
 ### Convert PNG to Matrix Format
@@ -44,6 +53,21 @@ plot(img, main = "Original Image")
 img_gray <- grayscale(img)
 img_matrix <- as.matrix(img_gray)
 dim(img_matrix)  # Check dimensions
+```
+
+### Extract Channel Matrices
+
+```{r}
+r <- R(img)
+g <- G(img)
+b <- B(img)
+```
+
+# Combine into single 3'D array or view individual channels
+
+```{r}
+img_matrix <- list(red = r, green = g, blue = b)
+str(img_matrix)
 ```
 
 ## Step 2: Convert LIF and LIFEXT to PNG (Pre-Step)
@@ -91,6 +115,15 @@ dataset <- features %>%
   )
 ```
 
+### Ensure PNP_present has both 0s and 1s
+
+```{r}
+if (length(unique(dataset$PNP_present)) < 2) {
+  warning("Generated outcome has only one class; modifying one row to ensure two levels.")
+  dataset$PNP_present[1] <- 1 - dataset$PNP_present[1]
+}
+```
+
 Fit logistic regression:
 
 ```{r logit-model}
@@ -108,6 +141,15 @@ plot(roc_obj, main = "ROC Curve")
 auc(roc_obj)
 ```
 
+### Visualize the difference by overlap class
+
+```{r}
+ggplot(dataset, aes(x = factor(PNP_present), y = overlap_ratio)) +
+  geom_boxplot() +
+  labs(x = "PNP Present", y = "Overlap Ratio")
+
+```
+
 ## Step 6: Automate on All PNGs
 
 ```{r batch-process, eval=FALSE}
@@ -117,7 +159,7 @@ all_features <- map_dfr(all_imgs, function(path) {
   img <- load.image(path)
   extract_color_features(img) %>% mutate(file = basename(path))
 })
-write_csv(all_features, here("output", "image_features.csv"))
+write_csv(all_features, here("data", "image_features.csv"))
 ```
 
 ## Conclusion
