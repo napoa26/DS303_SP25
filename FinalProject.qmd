@@ -66,7 +66,7 @@ b <- B(img)
 # Combine into single 3'D array or view individual channels
 
 ```{r}
-img_matrix <- list(red = r, green = g, blue = b)
+img_matrix <- list(red = r, green = g, black = b)
 str(img_matrix)
 ```
 
